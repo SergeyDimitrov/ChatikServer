@@ -6,12 +6,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ServerData {
-    public static final LinkedList<Socket> clientsList = new LinkedList<>();
+    public static final LinkedList<ClientData> clientsList = new LinkedList<>();
     public static final BlockingQueue<String> messagesList = new LinkedBlockingQueue<>();
 
-    public static void addClient(Socket newClient) {
+    public static void addClient(Socket clientSocket, String clientNickname) {
         synchronized (clientsList) {
-            clientsList.add(newClient);
+            clientsList.add(new ClientData(clientSocket, clientNickname));
         }
     }
 
@@ -26,9 +26,9 @@ public class ServerData {
 
     public static void sendMessage(String message) throws IOException {
         synchronized (clientsList) {
-            for (Socket clientSocket : clientsList) {
-                if (!clientSocket.isClosed()) {
-                    PrintWriter messageWriter = new PrintWriter(clientSocket.getOutputStream());
+            for (ClientData clientData : clientsList) {
+                if (!clientData.getClientSocket().isClosed()) {
+                    PrintWriter messageWriter = new PrintWriter(clientData.getClientSocket().getOutputStream());
                     messageWriter.print(message);
                     messageWriter.flush();
                 }
@@ -36,4 +36,14 @@ public class ServerData {
         }
     }
 
+    public static boolean nicknameExists(String nickname) {
+        synchronized (clientsList) {
+            for (ClientData clientData : clientsList) {
+                if (!clientData.getClientSocket().isClosed() && nickname.equals(clientData.getClientNickname())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 }

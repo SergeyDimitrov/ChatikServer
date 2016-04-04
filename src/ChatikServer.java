@@ -11,8 +11,14 @@ public class ChatikServer {
         new ServerThread().start();
         while (true) {
             Socket socket = serverSocket.accept();
-            ServerData.addClient(socket);
-            new UserThread(socket).start();
+            String nickname = SocketUtils.readMessage(socket);
+            if (ServerData.nicknameExists(nickname)) {
+                SocketUtils.sendMessage(socket, SocketUtils.NICKNAME_EXISTS);
+            } else {
+                SocketUtils.sendMessage(socket, SocketUtils.OK);
+                ServerData.addClient(socket, nickname);
+                new UserThread(socket).start();
+            }
         }
     }
 }
